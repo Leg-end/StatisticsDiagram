@@ -629,26 +629,6 @@ public class HistogramView extends View {
         return rect;
     }
 
-    /*
-     * 集成animation的一个动画类
-     *
-     * @author 李垭超
-     */
-    /*private class HistogramAnimation extends Animation {
-        protected void applyTransformation(float interpolatedTime,
-                                           Transformation t) {
-            super.applyTransformation(interpolatedTime, t);
-            if (interpolatedTime < 1.0f && flag == 2) {
-                for (int i = 0; i < aniProgress.size(); i++) {
-                    aniProgress.get(i).setSteps((int) (progress[i] * interpolatedTime));
-                }
-            } else {
-                for (int i = 0; i < aniProgress.size(); i++) {
-                    aniProgress.get(i).setSteps(progress[i]);
-                }
-            }
-            invalidate();
-        }
-    }*/
+
 
 }
