@@ -156,7 +156,7 @@ public class HistogramView extends View {
         Log.d(TAG,"xStep:"+xStep);
         switch (state) {
             case DAY:
-                timeInterval = rWidth/16;
+                timeInterval = ((inFlows.get(inFlows.size()-1).getHour()-8)*(rWidth/xStep))/inFlows.size();
                 break;
             case MONTH:
             case YEAR:
