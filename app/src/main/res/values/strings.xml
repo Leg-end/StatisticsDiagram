@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">StatisticsDiagram</string>
+    <string name="year">年</string>
+    <string name="month">月</string>
+    <string name="day">日</string>
+    <string name="compare">对比</string>
+    <string name="totalPeople">总人数</string>
+    <string name="income">营业额</string>
+    <string name="businessNum">交易量</string>
+    <string name="bagRate">提袋率</string>
+</resources>
