@@ -2,7 +2,7 @@ package com.person.legend.statisticsdiagram.bean;
 
 public class BusinessFlow {
     private int num;
-    private int hour;
+    private int time;
     private String date;
     private String[] ymd;
     private int day;
@@ -12,9 +12,9 @@ public class BusinessFlow {
     public BusinessFlow() {
     }
 
-    public BusinessFlow(int num, int hour, String date) {
+    public BusinessFlow(int num, int time, String date) {
         this.num = num;
-        this.hour = hour;
+        this.time = time;
         this.date = date;
         ymd = this.date.split("/");
         this.day = Integer.parseInt(ymd[2]);
@@ -30,12 +30,12 @@ public class BusinessFlow {
         this.num = num;
     }
 
-    public int getHour() {
-        return hour;
+    public int getTime() {
+        return time;
     }
 
-    public void setHour(int hour) {
-        this.hour = hour;
+    public void setTime(int time) {
+        this.time = time;
     }
 
     public String getDate() {

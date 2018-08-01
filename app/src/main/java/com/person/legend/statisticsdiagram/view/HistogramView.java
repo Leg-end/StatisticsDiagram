@@ -12,6 +12,7 @@ import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.Path;
 import android.graphics.PathDashPathEffect;
+import android.graphics.PathMeasure;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -52,7 +53,7 @@ public class HistogramView extends View {
     private List<BusinessFlow> inFlows,compareFlows;
     private DateState state = DateState.DAY;
     private boolean isCompare = false;//是否对比数据
-    private List<PointF> inPoints,comparePoints;
+    private List<PointF> inPoints,comparePoints,crossPoints;
     private Rect yTextBound,xTextBound,markTextBound;
 
     // 坐标轴左侧的数标
@@ -67,6 +68,8 @@ public class HistogramView extends View {
     private String now;
     // 标题
     private StringBuilder title;
+    //日数据的更新频率 60/tateFre
+    private int rateMeasure = 6;//default update/10 mins
 
     public HistogramView(Context context) {
         super(context);
@@ -109,7 +112,7 @@ public class HistogramView extends View {
                 FakeUtil.generateMonthData(isCompare,inFlows,compareFlows,60);
                 break;
             case DAY:
-                FakeUtil.generateDayData(isCompare,inFlows,compareFlows,30);
+                FakeUtil.generateDayData(isCompare,inFlows,compareFlows,30,rateMeasure);
                 break;
         }
     }
@@ -146,7 +149,7 @@ public class HistogramView extends View {
         if(max%100 > 0)//向百位数取整,方便以n.mK的形式输出
             max += (100-max%100);
         Log.d(TAG,"max:"+max);
-        marginL = dp2px(28)+xTextBound.width()/2;
+        marginL = dp2px(32)+xTextBound.width()/2;
         marginB = dp2px(40);
         marginR = dp2px(60);
         marginT = dp2px(42);
@@ -156,7 +159,7 @@ public class HistogramView extends View {
         Log.d(TAG,"xStep:"+xStep);
         switch (state) {
             case DAY:
-                timeInterval = ((inFlows.get(inFlows.size()-1).getHour()-8)*(rWidth/xStep))/inFlows.size();
+                timeInterval = rWidth/(16*rateMeasure);
                 break;
             case MONTH:
             case YEAR:
@@ -287,20 +290,17 @@ public class HistogramView extends View {
     private void drawData(Canvas canvas) {
         float bottomLine = mHeight-marginB-dp2px(1);
         if(state == DateState.DAY) {
-            Path path = DrawUtil.preparePoints(inPoints);
-            DrawUtil.drawPoints(canvas, getColorByResId(R.color.colorLightBlue), flowPaint);
-            for(int i = 0;i < 2;i++) {
-                drawGradientShader(true,canvas,path
-                        ,inPoints.get(i*8),inPoints.get((i+1)*8),bottomLine);
-            }
+            Path path = DrawUtil.drawCurvesFromPoints(canvas,inPoints,0.1
+                    ,getColorByResId(R.color.colorLightBlue),flowPaint);
+            drawGradientShader(true,canvas,path
+                    ,inPoints.get(0),inPoints.get(inPoints.size()-1),bottomLine);
+
             if (isCompare) {
                 flowPaint.setPathEffect(new DashPathEffect(new float[]{5,5},0));
-                Path comparePath = DrawUtil.preparePoints(comparePoints);
-                DrawUtil.drawPoints(canvas, getColorByResId(R.color.colorOrangeRed), flowPaint);
-                for(int i = 0;i < 2;i++) {
-                    drawGradientShader(false,canvas,comparePath
-                            ,comparePoints.get(i*8),comparePoints.get((i+1)*8),bottomLine);
-                }
+                Path comparePath = DrawUtil.drawCurvesFromPoints(canvas,comparePoints,0.2
+                        ,getColorByResId(R.color.colorOrangeRed),flowPaint);
+                drawGradientShader(false,canvas,comparePath
+                        ,comparePoints.get(0),comparePoints.get(comparePoints.size()-1),bottomLine);
                 flowPaint.setPathEffect(null);
             }
             drawPoint(canvas);
@@ -308,6 +308,29 @@ public class HistogramView extends View {
             drawColumns(canvas);
         }
     }
+
+    /**
+     * 关键在于如何截取曲线路径上的一段。。这个点一直没搞定,暂时现放在这里把
+     */
+    private void drawCompareGradientShader(Canvas canvas
+            ,Path comparePath,Path inPath,float bottomLine) {
+        PathMeasure pathMeasure = new PathMeasure(comparePath,false);
+        Path clip;
+        for(int i = 0;i < crossPoints.size()-1;i++) {
+            PointF pHead = crossPoints.get(i);
+            PointF pNext = crossPoints.get(i+1);
+            int middleIndex = (comparePoints.indexOf(pHead)
+                    +comparePoints.indexOf(pNext))/2;
+            //if(inPoints.get(middleIndex).y > comparePoints.get(middleIndex).y)
+                /*drawGradientShader(true,canvas
+                        ,pathMeasure.getSegment()
+                        ,pHead,pNext,bottomLine);*/
+            //else
+                //drawGradientShader(true,canvas,comparePath,);
+        }
+    }
+
+
 
     /**
      *
@@ -363,7 +386,7 @@ public class HistogramView extends View {
         setPaintColor(R.color.colorLightBlue,flowPaint);
         for(int i = 0;i < inFlows.size();i++) {
             Log.d(TAG,"x:"+inPoints.get(i).x+",y:"+inPoints.get(i).y);
-            if(inFlows.get(i).getHour()%4 == 0&&i != 0) {
+            if(inFlows.get(i).getTime()%(4*rateMeasure) == 0&&i != 0) {
                 canvas.drawCircle(inPoints.get(i).x,inPoints.get(i).y,dp2px(4),flowPaint);
             }
         }
@@ -371,7 +394,7 @@ public class HistogramView extends View {
             setPaintColor(R.color.colorOrangeRed,flowPaint);
             int len = dp2px(5);
             for(int i = 0;i < inFlows.size();i++) {
-                if(inFlows.get(i).getHour()%4 == 0&&i != 0) {
+                if(inFlows.get(i).getTime()%(4*rateMeasure) == 0&&i != 0) {
                     PointF pointF = comparePoints.get(i);
                     canvas.drawBitmap(BitmapFactory.decodeResource(
                             mResources,R.mipmap.ic_shape_triangle_red)
@@ -566,16 +589,21 @@ public class HistogramView extends View {
         inPoints = new ArrayList<>();
         for(int i = 0;i < inFlows.size();i++) {
             BusinessFlow in = inFlows.get(i);
-            Log.d(TAG,"hour:"+in.getHour()+",num:"+in.getNum());
-            inPoints.add(new PointF((in.getHour()-8)*timeInterval+marginL
+            //Log.d(TAG,"in time:"+in.getTime()+",in num:"+in.getNum());
+            inPoints.add(new PointF(in.getTime()*timeInterval+marginL
                     ,mHeight-(in.getNum()*numInterval+marginB)));
         }
         if(isCompare) {
+            crossPoints = new ArrayList<>();
             comparePoints = new ArrayList<>();
             for(int i = 0;i < inFlows.size();i++) {
                 BusinessFlow compare = compareFlows.get(i);
-                comparePoints.add(new PointF((compare.getHour()-8)*timeInterval+marginL
-                        ,mHeight-(compare.getNum()*numInterval+marginB)));
+                //Log.d(TAG,"compare time:"+compare.getTime()+",compare num:"+compare.getNum());
+                PointF temp = new PointF(compare.getTime()*timeInterval+marginL
+                        ,mHeight-(compare.getNum()*numInterval+marginB));
+                comparePoints.add(temp);
+                if(compare.getNum() == inFlows.get(i).getNum())
+                    crossPoints.add(temp);
             }
         }
     }

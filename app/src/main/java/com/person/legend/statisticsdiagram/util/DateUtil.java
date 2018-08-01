@@ -1,9 +1,10 @@
 package com.person.legend.statisticsdiagram.util;
 
 import java.util.Calendar;
+import java.util.TimeZone;
 
 public final class DateUtil {
-    private final static Calendar calendar = Calendar.getInstance();
+    private final static Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT+8"));
 
     private DateUtil() {
     }
