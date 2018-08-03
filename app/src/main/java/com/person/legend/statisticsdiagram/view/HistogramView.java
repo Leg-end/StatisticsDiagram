@@ -493,14 +493,14 @@ public class HistogramView extends View {
                     }
                 break;
             case MONTH:
-                for (int i = 0; i < xSteps.length-1; i++) {
-                    Log.d(TAG,"xSteps["+i+"]:"+xSteps[i]);
-                    if((i+1)%2 != 0)
-                        canvas.drawText(xSteps[i], marginL+xInterval*i
-                                , height + dp2px(10)+xTextBound.height()/2, titlePaint);
+                int index = 0;
+                titlePaint.setTextSize(sp2px(8));
+                for (; index < xSteps.length; index++) {
+                    Log.d(TAG,"xSteps["+index+"]:"+xSteps[index]);
+                    canvas.drawText(xSteps[index], marginL+xInterval*index
+                            , height + dp2px(10)+xTextBound.height()/2, titlePaint);
                 }
-                canvas.drawText(xSteps[xSteps.length-1], marginL+xInterval*(xSteps.length-1)
-                                , height + dp2px(10)+xTextBound.height()/2, titlePaint);
+                titlePaint.setTextSize(sp2px(12));
                 break;
             case YEAR:
                 for (int i = 0; i < xSteps.length; i++) {
