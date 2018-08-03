@@ -17,10 +17,12 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 
 import com.person.legend.statisticsdiagram.R;
@@ -31,6 +33,7 @@ import com.person.legend.statisticsdiagram.util.CommonUtil;
 import com.person.legend.statisticsdiagram.util.DateUtil;
 import com.person.legend.statisticsdiagram.util.DrawUtil;
 import com.person.legend.statisticsdiagram.util.FakeUtil;
+import com.person.legend.statisticsdiagram.util.LogUtil;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -44,6 +47,7 @@ public class HistogramView extends View {
     private Paint titlePaint;// 绘制文本的画笔
     private Paint flowPaint;// 绘制流的画笔
     private Paint markPaint;// 绘制侧标识的画笔
+    private Paint clickPaint;// 点击时绘制标识的画笔
     private float timeInterval,numInterval;//x,y 轴基本比例
     private int mWidth,mHeight;
     private float rHeight,rWidth;//坐标轴内真实的测量尺度
@@ -70,6 +74,8 @@ public class HistogramView extends View {
     private StringBuilder title;
     //日数据的更新频率 60/tateFre
     private int rateMeasure = 6;//default update/10 mins
+    private boolean showValue = false;
+    private PointF clickPoint;
 
     public HistogramView(Context context) {
         super(context);
@@ -149,7 +155,7 @@ public class HistogramView extends View {
         if(max%100 > 0)//向百位数取整,方便以n.mK的形式输出
             max += (100-max%100);
         Log.d(TAG,"max:"+max);
-        marginL = dp2px(36)+xTextBound.width()/2;
+        marginL = dp2px(44) + xTextBound.width() / 2;
         marginB = dp2px(40);
         marginR = dp2px(60);
         marginT = dp2px(42);
@@ -237,6 +243,7 @@ public class HistogramView extends View {
     }
 
     private void init() {
+        showValue = false;
         addFakeData();
         initPaint();
         now = inFlows.get(0).getDate();
@@ -258,6 +265,7 @@ public class HistogramView extends View {
         titlePaint = new Paint();
         flowPaint = new Paint();
         markPaint = new Paint();
+        clickPaint = new Paint();
 
         // 给画笔设置颜色
         xLinePaint.setColor(Color.BLACK);
@@ -270,6 +278,9 @@ public class HistogramView extends View {
         titlePaint.setStyle(Paint.Style.FILL);
         flowPaint.setStrokeWidth(dp2px(2));
         markPaint.setAntiAlias(true);
+        setPaintColor(R.color.colorLightGreen, clickPaint);
+        clickPaint.setStyle(Paint.Style.FILL);
+        clickPaint.setStrokeWidth(dp2px(3));
     }
 
     /*public void start(int flag) {
@@ -288,6 +299,26 @@ public class HistogramView extends View {
         drawCoordinate(canvas);
         /*---根据给定数据绘制曲线or柱状图---*/
         drawData(canvas);
+        if(showValue)
+            drawValue(canvas,clickPoint);
+
+    }
+
+    private void drawValue(Canvas canvas, PointF pointF) {
+        String msg = String.valueOf(inFlows.get(inPoints.indexOf(pointF)).getNum());
+        canvas.drawText(msg,pointF.x,pointF.y
+                -getTextBounds(msg,titlePaint).height()-dp2px(2),titlePaint);
+        switch (state) {
+            case DAY:
+                canvas.drawCircle(pointF.x, pointF.y, dp2px(6), clickPaint);
+                canvas.drawLine(pointF.x, pointF.y
+                        , pointF.x, rHeight+marginT, clickPaint);
+                break;
+            case MONTH:
+                break;
+            case YEAR:
+                break;
+        }
 
     }
 
@@ -622,12 +653,38 @@ public class HistogramView extends View {
         return (int) (v * value + 0.5f);
     }
 
-    /*
+    /**
      * 设置点击事件，是否显示数字
+     **/
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        int step = (getWidth() - dp2px(30)) / 8;
+        float x = event.getX();
+        float y = event.getY();
+        LogUtil.d("click point is ....................x:"+x+",y:"+y);
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_MOVE:
+                for (PointF pointF : inPoints) {
+                    LogUtil.d("point (x,y)->("+pointF.x+","+pointF.y+")coming through");
+                    if (Math.abs(pointF.x - x) < timeInterval / 2) {
+                        LogUtil.d("in loop");
+                        clickPoint = pointF;
+                        LogUtil.d("find point:(x,y)->("+pointF.x+","+pointF.y+")");
+                        showValue = true;
+                        if (Looper.getMainLooper() == Looper.myLooper()) {
+                            LogUtil.d("redraw in UI thread");
+                            invalidate();
+                        } else {
+                            LogUtil.d("redraw by post in UI thread");
+                            postInvalidate();
+                        }
+                        break;
+                    }
+                }
+                break;
+        }
+        /*int step = (getWidth() - dp2px(30)) / 8;
         int x = (int) event.getX();
         for (int i = 0; i < 7; i++) {
             if (x > (dp2px(15) + step * (i + 1) - dp2px(15))
@@ -644,9 +701,9 @@ public class HistogramView extends View {
                     postInvalidate();
                 }
             }
-        }
+        }*/
         return super.onTouchEvent(event);
-    }*/
+    }
 
     /**
      * 获取丈量文本的矩形
