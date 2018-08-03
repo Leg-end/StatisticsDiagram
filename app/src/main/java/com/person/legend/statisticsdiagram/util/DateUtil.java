@@ -12,15 +12,21 @@ public final class DateUtil {
     public static String[] generateMonthDays(int year, int month) {
         String[] target;
         int len = getCurrentTimeFiled(Calendar.DAY_OF_MONTH);
-        if (len < DateUtil.getDayNum(year, month)) {
-            target = new String[len + 1];
-            target[len] = "...";
-        } else {
+        int num = DateUtil.getDayNum(year,month);
+        int index = 0;
+        if (num - len > 1) {
+            target = new String[(len > 16 ? len+2:18)];
+            target[target.length-2] = "...";
+        } else if(num - len > 0) {
+            target = new String[len+1];
+        } else
             target = new String[len];
+        for (; index < target.length-2; index++) {
+            target[index] = String.valueOf((index + 1));
         }
-        for (int i = 0; i < len; i++) {
-            target[i] = String.valueOf((i + 1));
-        }
+        if(target[index].isEmpty())
+            target[index] = String.valueOf((index+1));
+        target[target.length-1] = String.valueOf(num);
         return target;
     }
 

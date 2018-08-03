@@ -149,7 +149,7 @@ public class HistogramView extends View {
         if(max%100 > 0)//向百位数取整,方便以n.mK的形式输出
             max += (100-max%100);
         Log.d(TAG,"max:"+max);
-        marginL = dp2px(32)+xTextBound.width()/2;
+        marginL = dp2px(36)+xTextBound.width()/2;
         marginB = dp2px(40);
         marginR = dp2px(60);
         marginT = dp2px(42);
@@ -162,8 +162,12 @@ public class HistogramView extends View {
                 timeInterval = rWidth/(16*rateMeasure);
                 break;
             case MONTH:
+                timeInterval = rWidth/xStep;
+                columnOffset = timeInterval/8;
+                break;
             case YEAR:
                 timeInterval = rWidth/xStep;
+                break;
         }//基本比例尺
         Log.d(TAG,"yInterval:"+numInterval+",xInterval:"+timeInterval);
         int diff = max/yStep;
@@ -212,7 +216,7 @@ public class HistogramView extends View {
                     marks = new String[]{"今天"};
                     title.append(" 客流统计图");
                 }
-                columnOffset = dp2px(3);
+                //columnOffset = dp2px(3);
                 break;
             case YEAR:
                 title = new StringBuilder(String.valueOf(ymd[0]));
@@ -290,7 +294,7 @@ public class HistogramView extends View {
     private void drawData(Canvas canvas) {
         float bottomLine = mHeight-marginB-dp2px(1);
         if(state == DateState.DAY) {
-            Path path = DrawUtil.drawCurvesFromPoints(canvas,inPoints,0.1
+            Path path = DrawUtil.drawCurvesFromPoints(canvas,inPoints,0.2
                     ,getColorByResId(R.color.colorLightBlue),flowPaint);
             drawGradientShader(true,canvas,path
                     ,inPoints.get(0),inPoints.get(inPoints.size()-1),bottomLine);
