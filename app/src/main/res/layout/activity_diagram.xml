@@ -1,110 +1,228 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools">
+    android:orientation="vertical">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:orientation="horizontal">
+
         <Button
             android:id="@+id/diagram_btn_year"
+            style="?buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
             android:layout_marginLeft="25dp"
             android:layout_marginRight="25dp"
+            android:layout_marginTop="8dp"
             android:layout_weight="1"
-            android:textSize="13sp"
-            android:textColor="@color/colorLightGray"
+            android:background="@drawable/btn_out_bg"
             android:text="@string/year"
-            android:textStyle="bold"
-            style="?buttonBarButtonStyle"
-            android:background="@drawable/btn_out_bg"/>
+            android:textColor="@color/colorLightGray"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
         <Button
             android:id="@+id/diagram_btn_month"
+            style="?buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
             android:layout_marginLeft="25dp"
             android:layout_marginRight="25dp"
+            android:layout_marginTop="8dp"
             android:layout_weight="1"
-            android:textSize="13sp"
-            android:textColor="@color/colorLightGray"
+            android:background="@drawable/btn_out_bg"
             android:text="@string/month"
-            android:textStyle="bold"
-            style="?buttonBarButtonStyle"
-            android:background="@drawable/btn_out_bg"/>
+            android:textColor="@color/colorLightGray"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
         <Button
             android:id="@+id/diagram_btn_day"
+            style="?buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
             android:layout_marginLeft="25dp"
             android:layout_marginRight="25dp"
+            android:layout_marginTop="8dp"
             android:layout_weight="1"
-            android:textSize="13sp"
-            android:textColor="@color/colorWhite"
+            android:background="@drawable/btn_on_bg"
             android:text="@string/day"
-            android:textStyle="bold"
-            style="?buttonBarButtonStyle"
-            android:background="@drawable/btn_on_bg"/>
+            android:textColor="@color/colorWhite"
+            android:textSize="13sp"
+            android:textStyle="bold" />
     </LinearLayout>
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp">
+
         <TextView
             android:id="@+id/diagram_tv_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textStyle="bold"
+            android:layout_centerInParent="true"
             android:textColor="@color/colorLightBlue"
             android:textSize="13sp"
-            android:layout_centerInParent="true"
-            tools:text="12号"/>
+            android:textStyle="bold"
+            tools:text="12号" />
+
         <ImageView
             android:id="@+id/diagram_iv_left"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
+            android:layout_marginEnd="51dp"
+            android:layout_marginRight="51dp"
             android:layout_toLeftOf="@id/diagram_tv_date"
             android:layout_toStartOf="@id/diagram_tv_date"
-            android:layout_marginRight="51dp"
-            android:layout_marginEnd="51dp"
-            android:src="@mipmap/ic_action_arrow_left"
-            android:contentDescription="@string/app_name"/>
+            android:contentDescription="@string/app_name"
+            android:src="@mipmap/ic_action_arrow_left" />
+
         <ImageView
             android:id="@+id/diagram_iv_right"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:layout_toRightOf="@id/diagram_tv_date"
-            android:layout_toEndOf="@id/diagram_tv_date"
             android:layout_marginLeft="51dp"
             android:layout_marginStart="51dp"
-            android:src="@mipmap/ic_action_arrow_right"
-            android:contentDescription="@string/app_name"/>
+            android:layout_toEndOf="@id/diagram_tv_date"
+            android:layout_toRightOf="@id/diagram_tv_date"
+            android:contentDescription="@string/app_name"
+            android:src="@mipmap/ic_action_arrow_right" />
+
         <TextView
             android:id="@+id/diagram_tv_compare"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
-            android:layout_marginRight="16dp"
-            android:layout_marginEnd="16dp"
             android:layout_centerVertical="true"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:text="@string/compare"
             android:textColor="@color/colorLightGray"
-            android:textStyle="bold"
             android:textSize="14sp"
-            android:text="@string/compare"/>
+            android:textStyle="bold" />
     </RelativeLayout>
+
+    <TextView
+        android:id="@+id/diagram_tv_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="19dp"
+        android:gravity="center"
+        android:textColor="@color/colorLightGray"
+        android:textSize="12sp"
+        tools:text="2018/8/3 客流统计" />
+
+    <RelativeLayout
+        android:id="@+id/diagram_rela_weather"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="9dp">
+
+        <TextView
+            android:id="@+id/diagram_tv_midday"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:text="@string/midday"
+            android:textColor="@color/colorLightGray"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="70dp"
+            android:layout_marginRight="70dp"
+            android:layout_toLeftOf="@id/diagram_tv_midday"
+            android:layout_toStartOf="@id/diagram_tv_midday"
+            android:text="@string/forenoon"
+            android:textColor="@color/colorLightGray"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="70dp"
+            android:layout_marginStart="70dp"
+            android:layout_toEndOf="@id/diagram_tv_midday"
+            android:layout_toRightOf="@id/diagram_tv_midday"
+            android:text="@string/forenoon"
+            android:textColor="@color/colorLightGray"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/diagram_tv_midday_weather"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/diagram_tv_midday"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/colorLightGray"
+            android:textSize="12sp"
+            tools:text="雨" />
+
+        <TextView
+            android:id="@+id/diagram_tv_forenoon_weather"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/diagram_tv_midday"
+            android:layout_marginEnd="85dp"
+            android:layout_marginRight="85dp"
+            android:layout_marginTop="6dp"
+            android:layout_toLeftOf="@id/diagram_tv_midday_weather"
+            android:layout_toStartOf="@id/diagram_tv_midday_weather"
+            android:textColor="@color/colorLightGray"
+            android:textSize="12sp"
+            tools:text="雨" />
+
+        <TextView
+            android:id="@+id/diagram_tv_afternoon_weather"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/diagram_tv_midday"
+            android:layout_marginLeft="85dp"
+            android:layout_marginStart="85dp"
+            android:layout_marginTop="6dp"
+            android:layout_toEndOf="@id/diagram_tv_midday_weather"
+            android:layout_toRightOf="@id/diagram_tv_midday_weather"
+            android:textColor="@color/colorLightGray"
+            android:textSize="12sp"
+            tools:text="雨" />
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="17dp"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="33dp"
+            android:layout_marginRight="33dp"
+            android:layout_toLeftOf="@id/diagram_tv_midday"
+            android:layout_toStartOf="@id/diagram_tv_midday"
+            android:background="@color/colorLightGray" />
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="17dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="33dp"
+            android:layout_marginStart="33dp"
+            android:layout_toEndOf="@id/diagram_tv_midday"
+            android:layout_toRightOf="@id/diagram_tv_midday"
+            android:background="@color/colorLightGray" />
+    </RelativeLayout>
+
     <com.person.legend.statisticsdiagram.view.HistogramView
         android:id="@+id/diagram_hgv"
         android:layout_width="match_parent"
         android:layout_height="268dp"
-        android:layout_marginTop="10dp"/>
+        android:layout_marginTop="10dp" />
+
 </LinearLayout>

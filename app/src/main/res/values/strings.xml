@@ -8,4 +8,8 @@
     <string name="income">营业额</string>
     <string name="businessNum">交易量</string>
     <string name="bagRate">提袋率</string>
+    <string name="forenoon">上午</string>
+    <string name="midday">中午</string>
+    <string name="afternoon">下午</string>
+    <string name="albumRes">图库</string>
 </resources>

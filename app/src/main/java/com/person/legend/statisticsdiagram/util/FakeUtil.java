@@ -11,7 +11,7 @@ import java.util.Random;
 
 public final class FakeUtil {
     private static final Random random = new Random();
-    private static final String date = DateUtil.getNowDateInFormat();
+    private static final String date = DateUtil.getNowDateInYDM();
     private FakeUtil() { }
     private static int[] randomSequence(int len,int bound) {
         int[] randomArr = new int[len];

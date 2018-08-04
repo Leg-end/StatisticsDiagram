@@ -48,17 +48,17 @@ public class HistogramView extends View {
     private Paint flowPaint;// 绘制流的画笔
     private Paint markPaint;// 绘制侧标识的画笔
     private Paint clickPaint;// 点击时绘制标识的画笔
-    private float timeInterval,numInterval;//x,y 轴基本比例
-    private int mWidth,mHeight;
-    private float rHeight,rWidth;//坐标轴内真实的测量尺度
-    private float marginT,marginB,marginL,marginR;
+    private float timeInterval, numInterval;//x,y 轴基本比例
+    private int mWidth, mHeight;
+    private float rHeight, rWidth;//坐标轴内真实的测量尺度
+    private float marginT, marginB, marginL, marginR;
     private float columnOffset = 3f;//柱状图时所绘矩形的宽度的一半
-    private int yStep = 4,xStep = 4;//按间隔步伐计算，不是按坐标标记数,所以坐标标记数要在此基础上加一
-    private List<BusinessFlow> inFlows,compareFlows;
+    private int yStep = 4, xStep = 4;//按间隔步伐计算，不是按坐标标记数,所以坐标标记数要在此基础上加一
+    private List<BusinessFlow> inFlows, compareFlows;
     private DateState state = DateState.DAY;
     private boolean isCompare = false;//是否对比数据
-    private List<PointF> inPoints,comparePoints,crossPoints;
-    private Rect yTextBound,xTextBound,markTextBound;
+    private List<PointF> inPoints, comparePoints, crossPoints;
+    private Rect yTextBound, xTextBound, markTextBound;
 
     // 坐标轴左侧的数标
     private String[] ySteps;
@@ -76,6 +76,7 @@ public class HistogramView extends View {
     private int rateMeasure = 6;//default update/10 mins
     private boolean showValue = false;
     private PointF clickPoint;
+    private Bitmap[] weathers;
 
     public HistogramView(Context context) {
         super(context);
@@ -88,11 +89,12 @@ public class HistogramView extends View {
     }
 
     public void setFlows(List<BusinessFlow> inFlows, @NonNull DateState state
-            ,List<BusinessFlow> compareFlows,boolean isCompare) {
+            , List<BusinessFlow> compareFlows, boolean isCompare, Bitmap[] weathers) {
         this.state = state;
         //this.inFlows = inFlows;
         //this.compareFlows = compareFlows;
         this.isCompare = isCompare;
+        this.weathers = weathers;
         init();
         invalidate();
     }
@@ -112,13 +114,13 @@ public class HistogramView extends View {
         compareFlows = new ArrayList<>();
         switch (state) {
             case YEAR:
-                FakeUtil.generateYearData(isCompare,inFlows,compareFlows,90);
+                FakeUtil.generateYearData(isCompare, inFlows, compareFlows, 90);
                 break;
             case MONTH:
-                FakeUtil.generateMonthData(isCompare,inFlows,compareFlows,60);
+                FakeUtil.generateMonthData(isCompare, inFlows, compareFlows, 60);
                 break;
             case DAY:
-                FakeUtil.generateDayData(isCompare,inFlows,compareFlows,30,rateMeasure);
+                FakeUtil.generateDayData(isCompare, inFlows, compareFlows, 30, rateMeasure);
                 break;
         }
     }
@@ -127,66 +129,66 @@ public class HistogramView extends View {
         /*-------init x--------*/
         switch (state) {
             case DAY:
-                xSteps = new String[] { "8:00", "12:00", "16:00", "20:00", "24:00"};
+                xSteps = new String[]{"8:00", "12:00", "16:00", "20:00", "24:00"};
                 break;
             case MONTH:
-                xSteps = DateUtil.generateMonthDays(ymd[0],ymd[1]);
+                xSteps = DateUtil.generateMonthDays(ymd[0], ymd[1]);
                 break;
             case YEAR:
-                xSteps = new String[]{"一","二","三","四","五","六","七","八","九","十","十","十"};
+                xSteps = new String[]{"一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十", "十"};
                 break;
         }
-        xStep = xSteps.length-1;
-        xTextBound = getTextBounds(xSteps[xSteps.length-1],titlePaint);
+        xStep = xSteps.length - 1;
+        xTextBound = getTextBounds(xSteps[xSteps.length - 1], titlePaint);
         /*-------init x--------*/
         /*-------init y--------*/
-        Log.d(TAG,"width:"+mWidth+",height:"+mHeight);
+        LogUtil.d("width:" + mWidth + ",height:" + mHeight);
         int max = 1;
-        for(BusinessFlow flow:inFlows) {
-            if(flow.getNum() >= max)
+        for (BusinessFlow flow : inFlows) {
+            if (flow.getNum() >= max)
                 max = flow.getNum();
         }
-        if(isCompare) {
-            for(BusinessFlow flow:compareFlows) {
-                if(flow.getNum() >= max)
+        if (isCompare) {
+            for (BusinessFlow flow : compareFlows) {
+                if (flow.getNum() >= max)
                     max = flow.getNum();
             }
         }
-        if(max%100 > 0)//向百位数取整,方便以n.mK的形式输出
-            max += (100-max%100);
-        Log.d(TAG,"max:"+max);
+        if (max % 100 > 0)//向百位数取整,方便以n.mK的形式输出
+            max += (100 - max % 100);
+        LogUtil.d("max:" + max);
         marginL = dp2px(44) + xTextBound.width() / 2;
         marginB = dp2px(40);
         marginR = dp2px(60);
-        marginT = dp2px(42);
-        rHeight = mHeight-marginT-marginB;
-        rWidth = mWidth-marginL-marginR;
-        numInterval = rHeight/max;//基本比例尺
-        Log.d(TAG,"xStep:"+xStep);
+        marginT = dp2px(20);
+        rHeight = mHeight - marginT - marginB;
+        rWidth = mWidth - marginL - marginR;
+        numInterval = rHeight / max;//基本比例尺
+        LogUtil.d("xStep:" + xStep);
         switch (state) {
             case DAY:
-                timeInterval = rWidth/(16*rateMeasure);
+                timeInterval = rWidth / (16 * rateMeasure);
                 break;
             case MONTH:
-                timeInterval = rWidth/xStep;
-                columnOffset = timeInterval/8;
+                timeInterval = rWidth / xStep;
+                columnOffset = timeInterval / 6;
                 break;
             case YEAR:
-                timeInterval = rWidth/xStep;
+                timeInterval = rWidth / xStep;
                 break;
         }//基本比例尺
-        Log.d(TAG,"yInterval:"+numInterval+",xInterval:"+timeInterval);
-        int diff = max/yStep;
-        ySteps = new String[yStep+1];
-        for(int i = 0;i <= yStep;i++) {
-            int num = i*diff;
-            if(num >= 1000) {
-                ySteps[i] = num/1000+"."+(num/100)%10+"K";
+        LogUtil.d("yInterval:" + numInterval + ",xInterval:" + timeInterval);
+        int diff = max / yStep;
+        ySteps = new String[yStep + 1];
+        for (int i = 0; i <= yStep; i++) {
+            int num = i * diff;
+            if (num >= 1000) {
+                ySteps[i] = num / 1000 + "." + (num / 100) % 10 + "K";
             } else {
                 ySteps[i] = String.valueOf(num);
             }
         }
-        yTextBound = getTextBounds("800",titlePaint);
+        yTextBound = getTextBounds("800", titlePaint);
         /*-------init y--------*/
     }
 
@@ -199,11 +201,11 @@ public class HistogramView extends View {
         switch (state) {
             case DAY:
                 title = new StringBuilder(now);
-                if(isCompare) {
-                    int preDay = ymd[2]-1;
-                    marks = new String[]{ymd[1]+"/"+ymd[2], ymd[1]+"/"+preDay};
+                if (isCompare) {
+                    int preDay = ymd[2] - 1;
+                    marks = new String[]{ymd[1] + "/" + ymd[2], ymd[1] + "/" + preDay};
                     title.append(" vs ");
-                    title.append(now.subSequence(0,secondIndex+1));
+                    title.append(now.subSequence(0, secondIndex + 1));
                     title.append(preDay);
                 } else {
                     marks = new String[]{"总人数"};
@@ -211,12 +213,12 @@ public class HistogramView extends View {
                 }
                 break;
             case MONTH:
-                title = new StringBuilder(now.substring(0,secondIndex));
-                if(isCompare) {
-                    int preMonth = ymd[1]-1;
-                    marks = new String[]{ymd[1]+"月",preMonth+"月"};
+                title = new StringBuilder(now.substring(0, secondIndex));
+                if (isCompare) {
+                    int preMonth = ymd[1] - 1;
+                    marks = new String[]{ymd[1] + "月", preMonth + "月"};
                     title.append(" vs ");
-                    title.append(now.substring(0,firstIndex+1));
+                    title.append(now.substring(0, firstIndex + 1));
                     title.append(preMonth);
                 } else {
                     marks = new String[]{"今天"};
@@ -226,10 +228,10 @@ public class HistogramView extends View {
                 break;
             case YEAR:
                 title = new StringBuilder(String.valueOf(ymd[0]));
-                if(isCompare) {
+                if (isCompare) {
                     columnOffset = dp2px(6);
-                    int preYear = ymd[0]-1;
-                    marks = new String[]{String.valueOf(ymd[0]),String.valueOf(preYear)};
+                    int preYear = ymd[0] - 1;
+                    marks = new String[]{String.valueOf(ymd[0]), String.valueOf(preYear)};
                     title.append(" vs ");
                     title.append(preYear);
                 } else {
@@ -239,21 +241,21 @@ public class HistogramView extends View {
                 }
                 break;
         }
-        markTextBound = getTextBounds(marks[marks.length-1],titlePaint);
+        markTextBound = getTextBounds(marks[marks.length - 1], titlePaint);
     }
 
     private void init() {
-        showValue = false;
+        showValue = false;//不设置为false的话会数据越界
         addFakeData();
         initPaint();
         now = inFlows.get(0).getDate();
         String[] strs = now.split("/");
         ymd = new int[strs.length];
-        for(int i = 0;i < strs.length;i++) {
+        for (int i = 0; i < strs.length; i++) {
             ymd[i] = Integer.parseInt(strs[i]);
         }
-        Log.d(TAG,"init...");
-        Log.d(TAG,"width:"+mWidth+",height:"+mHeight);
+        Log.d(TAG, "init...");
+        Log.d(TAG, "width:" + mWidth + ",height:" + mHeight);
         initSideMark();
         initCoordinateMark();
         generateCurvePoint();
@@ -270,7 +272,7 @@ public class HistogramView extends View {
         // 给画笔设置颜色
         xLinePaint.setColor(Color.BLACK);
         xLinePaint.setStrokeWidth(dp2px(1));
-        setPaintColor(R.color.colorSoftLimeGray,hLinePaint);
+        setPaintColor(R.color.colorSoftLimeGray, hLinePaint);
         titlePaint.setColor(Color.BLACK);
         titlePaint.setTextSize(sp2px(12));
         titlePaint.setTextAlign(Align.CENTER);
@@ -288,10 +290,14 @@ public class HistogramView extends View {
         this.startAnimation(ani);
     }*/
 
+    public String getTitle() {
+        return this.title.toString();
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if(this.inFlows == null)
+        if (this.inFlows == null)
             throw new NullPointerException("the data of business flow cannot be null");
         /*---绘制侧标识---*/
         drawSideMark(canvas);
@@ -299,44 +305,63 @@ public class HistogramView extends View {
         drawCoordinate(canvas);
         /*---根据给定数据绘制曲线or柱状图---*/
         drawData(canvas);
-        if(showValue)
-            drawValue(canvas,clickPoint);
+        if (showValue)
+            drawValue(canvas, clickPoint);
 
     }
 
     private void drawValue(Canvas canvas, PointF pointF) {
-        String msg = String.valueOf(inFlows.get(inPoints.indexOf(pointF)).getNum());
-        canvas.drawText(msg,pointF.x,pointF.y
-                -getTextBounds(msg,titlePaint).height()-dp2px(2),titlePaint);
+        titlePaint.setTextSize(sp2px(8));
+        int index = inPoints.indexOf(pointF);
+        String msg;
         switch (state) {
             case DAY:
                 canvas.drawCircle(pointF.x, pointF.y, dp2px(6), clickPaint);
                 canvas.drawLine(pointF.x, pointF.y
-                        , pointF.x, rHeight+marginT, clickPaint);
+                        , pointF.x, rHeight + marginT, clickPaint);
+                if (isCompare) {
+                    msg = String.valueOf(compareFlows.get(index).getNum());
+                    PointF comparePoint = comparePoints.get(index);
+                    canvas.drawText(msg, comparePoint.x, comparePoint.y
+                            - getTextBounds(msg, titlePaint).height() - dp2px(2), titlePaint);
+                    canvas.drawCircle(comparePoint.x, comparePoint.y, dp2px(6), clickPaint);
+                    canvas.drawLine(comparePoint.x, comparePoint.y
+                            , comparePoint.x, pointF.y, clickPaint);
+                }
+                msg = String.valueOf(inFlows.get(index).getNum());
+                canvas.drawText(msg, pointF.x, pointF.y
+                        - getTextBounds(msg, titlePaint).height() - dp2px(2), titlePaint);
                 break;
             case MONTH:
-                break;
             case YEAR:
+                msg = String.valueOf(inFlows.get(index).getNum());
+                if (isCompare) {
+                    msg += " vs " + String.valueOf(compareFlows.get(index).getNum());
+                }
+                canvas.drawText(msg, pointF.x, pointF.y
+                        - getTextBounds(msg, titlePaint).height() - dp2px(2), titlePaint);
                 break;
         }
 
+        titlePaint.setTextSize(sp2px(12));
     }
 
     private void drawData(Canvas canvas) {
-        float bottomLine = mHeight-marginB-dp2px(1);
-        if(state == DateState.DAY) {
-            Path path = DrawUtil.drawCurvesFromPoints(canvas,inPoints,0.2
-                    ,getColorByResId(R.color.colorLightBlue),flowPaint);
-            drawGradientShader(true,canvas,path
-                    ,inPoints.get(0),inPoints.get(inPoints.size()-1),bottomLine);
-
+        float bottomLine = mHeight - marginB - dp2px(1);
+        if (state == DateState.DAY) {
+            Path path = DrawUtil.drawCurvesFromPoints(canvas, inPoints, 0.2
+                    , getColorByResId(R.color.colorLightBlue), flowPaint);
+            drawGradientShader(true, canvas, path
+                    , inPoints.get(0), inPoints.get(inPoints.size() - 1), bottomLine);
             if (isCompare) {
-                flowPaint.setPathEffect(new DashPathEffect(new float[]{5,5},0));
-                Path comparePath = DrawUtil.drawCurvesFromPoints(canvas,comparePoints,0.2
-                        ,getColorByResId(R.color.colorOrangeRed),flowPaint);
-                drawGradientShader(false,canvas,comparePath
-                        ,comparePoints.get(0),comparePoints.get(comparePoints.size()-1),bottomLine);
+                flowPaint.setPathEffect(new DashPathEffect(new float[]{5, 5}, 0));
+                Path comparePath = DrawUtil.drawCurvesFromPoints(canvas, comparePoints, 0.2
+                        , getColorByResId(R.color.colorOrangeRed), flowPaint);
+                drawGradientShader(false, canvas, comparePath
+                        , comparePoints.get(0), comparePoints.get(comparePoints.size() - 1), bottomLine);
                 flowPaint.setPathEffect(null);
+            } else {
+                drawWeather(canvas);
             }
             drawPoint(canvas);
         } else {
@@ -344,54 +369,68 @@ public class HistogramView extends View {
         }
     }
 
+    private void drawWeather(Canvas canvas) {
+        int[] wea = new int[]{2 * rateMeasure, 8 * rateMeasure, 14 * rateMeasure};
+        int height = weathers[0].getHeight();
+        int width = weathers[0].getWidth();
+        PointF pointF;
+        for (int i = 0; i < 3; i++) {
+            if (wea[i] >= inPoints.size())
+                pointF = new PointF(wea[i] * timeInterval + marginL, (3 - i) * rWidth / 4 + marginT);
+            else
+                pointF = inPoints.get(wea[i]);
+            float top = pointF.y - height - dp2px(8);
+            top = top < marginT ? marginT : top;
+            canvas.drawBitmap(weathers[i], pointF.x - width / 2, top, markPaint);
+        }
+    }
+
     /**
      * 关键在于如何截取曲线路径上的一段。。这个点一直没搞定,暂时现放在这里把
      */
     private void drawCompareGradientShader(Canvas canvas
-            ,Path comparePath,Path inPath,float bottomLine) {
-        PathMeasure pathMeasure = new PathMeasure(comparePath,false);
+            , Path comparePath, Path inPath, float bottomLine) {
+        PathMeasure pathMeasure = new PathMeasure(comparePath, false);
         Path clip;
-        for(int i = 0;i < crossPoints.size()-1;i++) {
+        for (int i = 0; i < crossPoints.size() - 1; i++) {
             PointF pHead = crossPoints.get(i);
-            PointF pNext = crossPoints.get(i+1);
+            PointF pNext = crossPoints.get(i + 1);
             int middleIndex = (comparePoints.indexOf(pHead)
-                    +comparePoints.indexOf(pNext))/2;
+                    + comparePoints.indexOf(pNext)) / 2;
             //if(inPoints.get(middleIndex).y > comparePoints.get(middleIndex).y)
                 /*drawGradientShader(true,canvas
                         ,pathMeasure.getSegment()
                         ,pHead,pNext,bottomLine);*/
             //else
-                //drawGradientShader(true,canvas,comparePath,);
+            //drawGradientShader(true,canvas,comparePath,);
         }
     }
 
 
-
     /**
-     *
      * @param inOrCompare 标识绘制的是当前曲线的阴影还是对比的曲线的
-     * @param canvas 画布
-     * @param curvePath 曲线的路径
+     * @param canvas      画布
+     * @param curvePath   曲线的路径
      */
     private void drawGradientShader(boolean inOrCompare, Canvas canvas
-            ,Path curvePath,PointF pStart,PointF pEnd,float bottomLine) {
+            , Path curvePath, PointF pStart, PointF pEnd, float bottomLine) {
         Path path = new Path();
         path.addPath(curvePath);
-        path.lineTo(pStart.x,bottomLine);
-        path.lineTo(pEnd.x,pEnd.y);
-        path.lineTo(pEnd.x,bottomLine);
+        path.lineTo(pStart.x, bottomLine);
+        path.lineTo(pEnd.x, pEnd.y);
+        path.lineTo(pEnd.x, bottomLine);
         path.close();
 
         //默认开启硬件加速的情况下 clipPath 需要SDK >18
         //如果关闭硬件加速，则不需要SDK要求
-        if(clipPathSupported()) {
+        if (clipPathSupported()) {
             int save = canvas.save();
             //将画布切割成path的形状
             canvas.clipPath(path);
 
             Drawable drawable = getFillDrawable(inOrCompare);
             drawable.setBounds((int) pStart.x, (int) pEnd.y
-                    , (int)pEnd.x, (int)bottomLine);
+                    , (int) pEnd.x, (int) bottomLine);
             drawable.draw(canvas);
             canvas.restoreToCount(save);
         }
@@ -404,43 +443,42 @@ public class HistogramView extends View {
         return CommonUtil.getSDKInt() >= 18;
     }
 
-    private Drawable getFillDrawable(boolean inOrCompare){
-        if(inOrCompare)
+    private Drawable getFillDrawable(boolean inOrCompare) {
+        if (inOrCompare)
             return getResources().getDrawable(R.drawable.path_fill_grdient_blue);
         else
             return getResources().getDrawable(R.drawable.path_fill_grdient_red);
     }
 
 
-
     /**
      * 绘制点
      */
-    private void drawPoint(Canvas canvas){
+    private void drawPoint(Canvas canvas) {
         flowPaint.setStyle(Paint.Style.FILL);
-        setPaintColor(R.color.colorLightBlue,flowPaint);
-        for(int i = 0;i < inFlows.size();i++) {
-            Log.d(TAG,"x:"+inPoints.get(i).x+",y:"+inPoints.get(i).y);
-            if(inFlows.get(i).getTime()%(4*rateMeasure) == 0&&i != 0) {
-                canvas.drawCircle(inPoints.get(i).x,inPoints.get(i).y,dp2px(4),flowPaint);
+        setPaintColor(R.color.colorLightBlue, flowPaint);
+        for (int i = 0; i < inFlows.size(); i++) {
+            Log.d(TAG, "x:" + inPoints.get(i).x + ",y:" + inPoints.get(i).y);
+            if (inFlows.get(i).getTime() % (2 * rateMeasure) == 0 && i != 0) {
+                canvas.drawCircle(inPoints.get(i).x, inPoints.get(i).y, dp2px(4), flowPaint);
             }
         }
-        if(isCompare) {
-            setPaintColor(R.color.colorOrangeRed,flowPaint);
+        if (isCompare) {
+            setPaintColor(R.color.colorOrangeRed, flowPaint);
             int len = dp2px(5);
-            for(int i = 0;i < inFlows.size();i++) {
-                if(inFlows.get(i).getTime()%(4*rateMeasure) == 0&&i != 0) {
+            for (int i = 0; i < inFlows.size(); i++) {
+                if (inFlows.get(i).getTime() % (2 * rateMeasure) == 0 && i != 0) {
                     PointF pointF = comparePoints.get(i);
                     canvas.drawBitmap(BitmapFactory.decodeResource(
-                            mResources,R.mipmap.ic_shape_triangle_red)
-                            ,pointF.x-len,pointF.y-len,markPaint);
+                            mResources, R.mipmap.ic_shape_triangle_red)
+                            , pointF.x - len, pointF.y - len, markPaint);
                     //canvas.drawCircle(comparePoints.get(i).x,comparePoints.get(i).y,dp2px(3),flowPaint);
                 }
             }
         }
     }
 
-    private void setPaintColor(int resId,Paint paint) {
+    private void setPaintColor(int resId, Paint paint) {
         paint.setColor(mResources.getColor(resId));
     }
 
@@ -452,95 +490,95 @@ public class HistogramView extends View {
         int otherColor = 0, currentMarkColor = 0;
         switch (state) {
             case MONTH:
-                setPaintColor(R.color.colorSoftLimeBlue,flowPaint);
+                setPaintColor(R.color.colorSoftLimeBlue, flowPaint);
                 otherColor = getColorByResId(R.color.colorOrangeRed);
                 currentMarkColor = getColorByResId(R.color.colorLightBlue);
                 //flowPaint.setShader(new LinearGradient());
                 break;
             case YEAR:
-                setPaintColor(R.color.colorLightBlue,flowPaint);
+                setPaintColor(R.color.colorLightBlue, flowPaint);
                 otherColor = getColorByResId(R.color.colorLimeBlue);
                 currentMarkColor = getColorByResId(R.color.colorPrimary);
                 break;
         }
-        if(isCompare) {
-            for(PointF pointF:inPoints) {
-                canvas.drawRect(new RectF(pointF.x-columnOffset
-                        ,pointF.y,pointF.x,mHeight-marginB),flowPaint);
+        if (isCompare) {
+            for (PointF pointF : inPoints) {
+                canvas.drawRect(new RectF(pointF.x - columnOffset
+                        , pointF.y, pointF.x, mHeight - marginB), flowPaint);
             }
             flowPaint.setColor(otherColor);
-            for(PointF pointF:comparePoints) {
+            for (PointF pointF : comparePoints) {
                 canvas.drawRect(new RectF(pointF.x
-                        ,pointF.y,pointF.x+columnOffset,mHeight-marginB),flowPaint);
+                        , pointF.y, pointF.x + columnOffset, mHeight - marginB), flowPaint);
             }
         } else {
-            for(int i = 0;i < inFlows.size()-1;i++) {
+            for (int i = 0; i < inFlows.size() - 1; i++) {
                 PointF pointF = inPoints.get(i);
-                canvas.drawRect(new RectF(pointF.x-columnOffset
-                        ,pointF.y,pointF.x+columnOffset,mHeight-marginB),flowPaint);
+                canvas.drawRect(new RectF(pointF.x - columnOffset
+                        , pointF.y, pointF.x + columnOffset, mHeight - marginB), flowPaint);
             }
-            PointF pointF = inPoints.get(inFlows.size()-1);
-            if(pointF.y == mHeight-marginB)
-                pointF = inPoints.get(inFlows.size()-2);
-            Log.d(TAG,"current num:"+pointF.y);
+            PointF pointF = inPoints.get(inFlows.size() - 1);
+            if (pointF.y == mHeight - marginB)
+                pointF = inPoints.get(inFlows.size() - 2);
+            Log.d(TAG, "current num:" + pointF.y);
             flowPaint.setColor(currentMarkColor);
-            canvas.drawRect(new RectF(pointF.x-columnOffset
-                    ,pointF.y,pointF.x+columnOffset,mHeight-marginB),flowPaint);
+            canvas.drawRect(new RectF(pointF.x - columnOffset
+                    , pointF.y, pointF.x + columnOffset, mHeight - marginB), flowPaint);
         }
     }
 
     private void drawCoordinate(Canvas canvas) {
         titlePaint.setColor(Color.BLACK);
         float height = mHeight - marginB;
-        float yShift = height-yTextBound.height()/2-dp2px(2);// 左侧外周的 需要划分的高度：
-        float xShift = dp2px(11)+yTextBound.width()/2;
+        float yShift = height - yTextBound.height() / 2 - dp2px(1);// 左侧外周的 需要划分的高度：
+        float xShift = dp2px(11) + yTextBound.width() / 2;
         // 绘制底部的线条
         canvas.drawLine(xShift, height,
                 mWidth - dp2px(41), height, xLinePaint);
         //分成四部分
-        float yInterval = rHeight/yStep;
+        float yInterval = rHeight / yStep;
         // 绘制 Y 轴坐标
 
         // 设置左部的数字
         for (int i = 0; i < ySteps.length; i++) {
-            canvas.drawText(ySteps[i], xShift,yShift-i*yInterval, titlePaint);
+            canvas.drawText(ySteps[i], xShift, yShift - i * yInterval, titlePaint);
         }
         hLinePaint.setTextAlign(Align.CENTER);
         // 设置四条虚线
-        yShift = height-dp2px(5)-yTextBound.height()/2;
+        yShift = height - dp2px(5) - yTextBound.height() / 2;
         for (int i = 1; i < 5; i++) {
-            canvas.drawLine(marginL,yShift-i*yInterval,mWidth- marginR
-                    ,yShift-i*yInterval, hLinePaint);
+            canvas.drawLine(marginL, yShift - i * yInterval, mWidth - marginR
+                    , yShift - i * yInterval, hLinePaint);
         }
         // 绘制 X 轴坐标
-        float xInterval = rWidth/xStep;
+        float xInterval = rWidth / xStep;
         // 设置底部的数字
         switch (state) {
             case DAY:
                 for (int i = 0; i < xSteps.length; i++) {
-                    Log.d(TAG,"xSteps["+i+"]:"+xSteps[i]);
-                    canvas.drawText(xSteps[i], marginL+xInterval*i
-                            , height + dp2px(8)+xTextBound.height()/2, titlePaint);
-                    }
+                    Log.d(TAG, "xSteps[" + i + "]:" + xSteps[i]);
+                    canvas.drawText(xSteps[i], marginL + xInterval * i
+                            , height + dp2px(8) + xTextBound.height() / 2, titlePaint);
+                }
                 break;
             case MONTH:
                 int index = 0;
                 titlePaint.setTextSize(sp2px(8));
                 for (; index < xSteps.length; index++) {
-                    Log.d(TAG,"xSteps["+index+"]:"+xSteps[index]);
-                    canvas.drawText(xSteps[index], marginL+xInterval*index
-                            , height + dp2px(10)+xTextBound.height()/2, titlePaint);
+                    Log.d(TAG, "xSteps[" + index + "]:" + xSteps[index]);
+                    canvas.drawText(xSteps[index], marginL + xInterval * index
+                            , height + dp2px(10) + xTextBound.height() / 2, titlePaint);
                 }
                 titlePaint.setTextSize(sp2px(12));
                 break;
             case YEAR:
                 for (int i = 0; i < xSteps.length; i++) {
-                    Log.d(TAG,"xSteps["+i+"]:"+xSteps[i]);
-                    canvas.drawText(xSteps[i], marginL+xInterval*i
-                            , height + dp2px(8)+xTextBound.height()/2, titlePaint);
-                    if(i >= 10 ) {
-                        canvas.drawText(xSteps[i%10], marginL+xInterval*i
-                                , height + dp2px(8)+xTextBound.height()*1.5f, titlePaint);
+                    Log.d(TAG, "xSteps[" + i + "]:" + xSteps[i]);
+                    canvas.drawText(xSteps[i], marginL + xInterval * i
+                            , height + dp2px(8) + xTextBound.height() / 2, titlePaint);
+                    if (i >= 10) {
+                        canvas.drawText(xSteps[i % 10], marginL + xInterval * i
+                                , height + dp2px(8) + xTextBound.height() * 1.5f, titlePaint);
                     }
                 }
                 break;
@@ -548,96 +586,96 @@ public class HistogramView extends View {
     }
 
     private void drawSideMark(Canvas canvas) {
-        setPaintColor(R.color.colorGray,titlePaint);
-        float yShift = marginT+dp2px(6),xShift = mWidth-marginR+dp2px(8);
+        setPaintColor(R.color.colorGray, titlePaint);
+        float yShift = marginT + dp2px(6), xShift = mWidth - marginR + dp2px(8);
         Bitmap bitmap;
         switch (state) {
             case DAY:
                 canvas.drawBitmap(BitmapFactory.decodeResource(
                         mResources, R.mipmap.statistics_day_numberofpeople)
-                        ,xShift,yShift,markPaint);
+                        , xShift, yShift, markPaint);
                 yShift += dp2px(6);
-                canvas.drawText(marks[0],xShift+markTextBound.width()/2
-                        , yShift += (dp2px(9)+markTextBound.height()/2), titlePaint);
-                if(isCompare) {
+                canvas.drawText(marks[0], xShift + markTextBound.width() / 2
+                        , yShift += (dp2px(9) + markTextBound.height() / 2), titlePaint);
+                if (isCompare) {
                     canvas.drawBitmap(BitmapFactory.decodeResource(
                             mResources, R.mipmap.other_days_line)
-                            , xShift, yShift += (markTextBound.height()/2+dp2px(15)), markPaint);
-                    canvas.drawText(marks[1],xShift+markTextBound.width()/2
-                            , yShift +dp2px(13)+markTextBound.height()/2,titlePaint);
+                            , xShift, yShift += (markTextBound.height() / 2 + dp2px(15)), markPaint);
+                    canvas.drawText(marks[1], xShift + markTextBound.width() / 2
+                            , yShift + dp2px(13) + markTextBound.height() / 2, titlePaint);
                 }
                 break;
             case MONTH:
-                if(isCompare) {
+                if (isCompare) {
                     xShift += dp2px(15);
                     bitmap = BitmapFactory.decodeResource(mResources
-                            ,R.mipmap.ar_graph_of_othermonth);
-                    canvas.drawBitmap(bitmap,xShift,yShift,markPaint);
-                    yShift += (bitmap.getHeight()+dp2px(6)+markTextBound.height()/2);
-                    canvas.drawText(marks[0],xShift+markTextBound.width()/2,yShift,titlePaint);
+                            , R.mipmap.ar_graph_of_othermonth);
+                    canvas.drawBitmap(bitmap, xShift, yShift, markPaint);
+                    yShift += (bitmap.getHeight() + dp2px(6) + markTextBound.height() / 2);
+                    canvas.drawText(marks[0], xShift + markTextBound.width() / 2, yShift, titlePaint);
 
-                    yShift += (markTextBound.height()/2+dp2px(12));
+                    yShift += (markTextBound.height() / 2 + dp2px(12));
                     /*bitmap = BitmapFactory.decodeResource(mContext.getResources()
                             ,R.mipmap.statistics_month_numberofpeople);*/
-                    canvas.drawBitmap(bitmap,xShift,yShift,markPaint);
-                    yShift += (bitmap.getHeight()+dp2px(6)+markTextBound.height()/2);
-                    canvas.drawText(marks[1],xShift+markTextBound.width()/2,yShift,titlePaint);
+                    canvas.drawBitmap(bitmap, xShift, yShift, markPaint);
+                    yShift += (bitmap.getHeight() + dp2px(6) + markTextBound.height() / 2);
+                    canvas.drawText(marks[1], xShift + markTextBound.width() / 2, yShift, titlePaint);
                 } else {
                     bitmap = BitmapFactory.decodeResource(mResources
-                            ,R.mipmap.statistics_month_numberofpeople);
-                    canvas.drawBitmap(bitmap,xShift,yShift,markPaint);
-                    xShift += (bitmap.getWidth()+dp2px(3)+markTextBound.width()/2);
-                    canvas.drawText(marks[0],xShift,bitmap.getHeight()/2+yShift
-                            +markTextBound.height()/2,titlePaint);
+                            , R.mipmap.statistics_month_numberofpeople);
+                    canvas.drawBitmap(bitmap, xShift, yShift, markPaint);
+                    xShift += (bitmap.getWidth() + dp2px(3) + markTextBound.width() / 2);
+                    canvas.drawText(marks[0], xShift, bitmap.getHeight() / 2 + yShift
+                            + markTextBound.height() / 2, titlePaint);
                 }
                 break;
             case YEAR:
-                if(isCompare) {
+                if (isCompare) {
                     bitmap = BitmapFactory.decodeResource(mResources
-                            ,R.mipmap.bar_graph_of_theyear);
-                    canvas.drawBitmap(bitmap,xShift,yShift,markPaint);
-                    yShift += (bitmap.getHeight()+dp2px(6)+markTextBound.height()/2);
-                    canvas.drawText(marks[0],xShift+markTextBound.width()/2,yShift,titlePaint);
+                            , R.mipmap.bar_graph_of_theyear);
+                    canvas.drawBitmap(bitmap, xShift, yShift, markPaint);
+                    yShift += (bitmap.getHeight() + dp2px(6) + markTextBound.height() / 2);
+                    canvas.drawText(marks[0], xShift + markTextBound.width() / 2, yShift, titlePaint);
 
-                    yShift += (markTextBound.height()/2+dp2px(12));
+                    yShift += (markTextBound.height() / 2 + dp2px(12));
                     bitmap = BitmapFactory.decodeResource(mResources
-                            ,R.mipmap.ar_graph_of_otheryear);
-                    canvas.drawBitmap(bitmap,xShift,yShift,markPaint);
-                    yShift += (bitmap.getHeight()+dp2px(6)+markTextBound.height()/2);
-                    canvas.drawText(marks[1],xShift+markTextBound.width()/2,yShift,titlePaint);
+                            , R.mipmap.ar_graph_of_otheryear);
+                    canvas.drawBitmap(bitmap, xShift, yShift, markPaint);
+                    yShift += (bitmap.getHeight() + dp2px(6) + markTextBound.height() / 2);
+                    canvas.drawText(marks[1], xShift + markTextBound.width() / 2, yShift, titlePaint);
                 } else {
                     bitmap = BitmapFactory.decodeResource(mResources
-                            ,R.mipmap.statistics_year_numberofpeople);
-                    canvas.drawBitmap(bitmap,xShift,yShift,markPaint);
-                    xShift += (bitmap.getWidth()+dp2px(3)+markTextBound.width()/2);
-                    canvas.drawText(marks[0],xShift,yShift+bitmap.getHeight()/2+markTextBound.height()/2,titlePaint);
+                            , R.mipmap.statistics_year_numberofpeople);
+                    canvas.drawBitmap(bitmap, xShift, yShift, markPaint);
+                    xShift += (bitmap.getWidth() + dp2px(3) + markTextBound.width() / 2);
+                    canvas.drawText(marks[0], xShift, yShift + bitmap.getHeight() / 2 + markTextBound.height() / 2, titlePaint);
                 }
                 break;
         }
-        setPaintColor(R.color.colorLimeGray,titlePaint);
-        Rect titleRect = getTextBounds(title.toString(),titlePaint);
-        canvas.drawText(title.toString(),mWidth/2,titleRect.height(),titlePaint);
+        //setPaintColor(R.color.colorLimeGray, titlePaint);
+        //Rect titleRect = getTextBounds(title.toString(), titlePaint);
+        //canvas.drawText(title.toString(), mWidth / 2, titleRect.height(), titlePaint);
     }
 
 
     private void generateCurvePoint() {
         inPoints = new ArrayList<>();
-        for(int i = 0;i < inFlows.size();i++) {
+        for (int i = 0; i < inFlows.size(); i++) {
             BusinessFlow in = inFlows.get(i);
             //Log.d(TAG,"in time:"+in.getTime()+",in num:"+in.getNum());
-            inPoints.add(new PointF(in.getTime()*timeInterval+marginL
-                    ,mHeight-(in.getNum()*numInterval+marginB)));
+            inPoints.add(new PointF(in.getTime() * timeInterval + marginL
+                    , mHeight - (in.getNum() * numInterval + marginB)));
         }
-        if(isCompare) {
+        if (isCompare) {
             crossPoints = new ArrayList<>();
             comparePoints = new ArrayList<>();
-            for(int i = 0;i < inFlows.size();i++) {
+            for (int i = 0; i < compareFlows.size(); i++) {
                 BusinessFlow compare = compareFlows.get(i);
                 //Log.d(TAG,"compare time:"+compare.getTime()+",compare num:"+compare.getNum());
-                PointF temp = new PointF(compare.getTime()*timeInterval+marginL
-                        ,mHeight-(compare.getNum()*numInterval+marginB));
+                PointF temp = new PointF(compare.getTime() * timeInterval + marginL
+                        , mHeight - (compare.getNum() * numInterval + marginB));
                 comparePoints.add(temp);
-                if(compare.getNum() == inFlows.get(i).getNum())
+                if (compare.getNum() == inFlows.get(i).getNum())
                     crossPoints.add(temp);
             }
         }
@@ -661,16 +699,16 @@ public class HistogramView extends View {
     public boolean onTouchEvent(MotionEvent event) {
         float x = event.getX();
         float y = event.getY();
-        LogUtil.d("click point is ....................x:"+x+",y:"+y);
+        LogUtil.d("click point is ....................x:" + x + ",y:" + y);
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_MOVE:
                 for (PointF pointF : inPoints) {
-                    LogUtil.d("point (x,y)->("+pointF.x+","+pointF.y+")coming through");
+                    LogUtil.d("point (x,y)->(" + pointF.x + "," + pointF.y + ")coming through");
                     if (Math.abs(pointF.x - x) < timeInterval / 2) {
                         LogUtil.d("in loop");
                         clickPoint = pointF;
-                        LogUtil.d("find point:(x,y)->("+pointF.x+","+pointF.y+")");
+                        LogUtil.d("find point:(x,y)->(" + pointF.x + "," + pointF.y + ")");
                         showValue = true;
                         if (Looper.getMainLooper() == Looper.myLooper()) {
                             LogUtil.d("redraw in UI thread");
@@ -708,7 +746,7 @@ public class HistogramView extends View {
     /**
      * 获取丈量文本的矩形
      *
-     * @param text contain content
+     * @param text  contain content
      * @param paint the paint draw the text
      * @return the rect wrap the text
      */
@@ -717,7 +755,4 @@ public class HistogramView extends View {
         paint.getTextBounds(text, 0, text.length(), rect);
         return rect;
     }
-
-
-
 }

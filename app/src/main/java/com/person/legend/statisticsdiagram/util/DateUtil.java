@@ -60,6 +60,12 @@ public final class DateUtil {
     }
 
     public static String getNowDateInFormat() {
+        return (getCurrentTimeFiled(Calendar.MONTH) + 1) + "月"
+                + getCurrentTimeFiled(Calendar.DAY_OF_MONTH) + "日 "
+                + "星期" + getCurrentTimeFiled(Calendar.WEEK_OF_MONTH) ;
+    }
+
+    public static String getNowDateInYDM() {
         return getCurrentTimeFiled(Calendar.YEAR) + "/"
                 + (getCurrentTimeFiled(Calendar.MONTH) + 1) + "/"
                 + getCurrentTimeFiled(Calendar.DAY_OF_MONTH);
